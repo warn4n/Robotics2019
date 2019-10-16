@@ -22,7 +22,7 @@ class Motor():
         if phiDot > 0:
             throt = .3+(.7*phiDot/3.8)
             throt = min(1,throt)
-        #print("Throtle right " + str(throt))
+        print("Throtle right " + str(throt))
         self.setRight(throt)
 
     def setPhiDotDesiredLeft(self,phiDot):
@@ -33,7 +33,7 @@ class Motor():
         if phiDot > 0:
             throt = .3+(.7*phiDot/3.8)
             throt = min(1,throt)
-        #print("Throtle left " + str(throt))
+        print("Throtle left " + str(throt))
         self.setLeft(throt)
 
     def PID(self,phiDotDesired,phiDotMeasured,Kp,target):

@@ -3,10 +3,13 @@
 import time
 import RPi.GPIO as GPIO
 from threading import Thread
+import math
 
 class Encoder(Thread):
 	GPIO.setmode(GPIO.BCM)
 
+	leftDistance = 0
+	rightDistance = 0
 
 
 	leftTime = time.time()
@@ -80,12 +83,16 @@ class Encoder(Thread):
 	def getPhiDotRight(self):
 		timeDelta = time.time() - self.rightTime
 		self.rightTime = time.time()
-		return (self.wheelRadiusCm*self.getRightTicks()/self.ticksInRev)/timeDelta
+		rotations = (self.wheelRadiusCm*self.getRightTicks()/self.ticksInRev)
+		self.rightDistance += rotations*2*math.pi
+		return rotations/timeDelta
 
 	def getPhiDotLeft(self):
 		timeDelta = time.time() - self.leftTime
 		self.leftTime = time.time()
-		return (self.wheelRadiusCm*self.getLeftTicks()/self.ticksInRev)/timeDelta
+		rotations = self.wheelRadiusCm*self.getLeftTicks()/self.ticksInRev
+		self.leftDistance += rotations * 2 * math.pi
+		return rotations/timeDelta
 
 
 
