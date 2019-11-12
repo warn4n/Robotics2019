@@ -16,7 +16,7 @@ class ParticleFilter:
 	particles = 0
 
 	def __init__(self, csv, cell_size, num_angles, angle_resolution, resample_rate, sigma_measure, sigma_resample_pos,
-	             sigma_resample_angle):
+				 sigma_resample_angle):
 		self.grid_map = pd.read_csv(csv).values  # read in csv and store as numpy array
 		self.cell_size = cell_size
 		self.n_angles = num_angles
@@ -28,7 +28,7 @@ class ParticleFilter:
 		self.loc_rows = np.size(self.grid_map, 0)
 		self.loc_cols = np.size(self.grid_map, 1)
 
-		init_particles()
+		self.init_particles()
 		self.update_estimation()
 
 	def ray_tracing(self, x_pos, y_pos, direction):
@@ -235,4 +235,22 @@ class ParticleFilter:
 			vector_scans = self.get_scans(self.particles[i][0],self.particles[i][1],self.particles[i][2])
 			self.particles[i][4:] = vector_scans
 
-			
+	def move_particles(self,delta_x,delta_y,delta_theta):
+			max_x = self.cols * self.cell_size
+			max_y = self.rows * self.cell_size
+			nan_vec = np.empty((1, 4 + self.n_angles,))
+
+			for i in range(self.N_samples):
+				self.particles[i][1] = self.particles[i][1] + delta_x
+				self.particles[i][2] = self.particles[i][2] + delta_y
+				self.particles[i][3] = (self.particles[i][3] + delta_theta)%360
+
+				ind_row = math.floor(self.particles[i][2] / self.cell_size) + 1
+				ind_col = math.floor(self.particles[i][1] / self.cell_size) + 1
+
+				if(self.particles[i][1] <= 0 or self.particles[i][1] >= max_x or
+					self.particles[i][2] <= 0 or self.particles[i][2] >= max_y):
+
+					self.particles[i][:] = nan_vec #outside map
+				elif not self.grid_map(ind_row, ind_col) == 0:
+					self.particles[i][:] = nan_vec #inside obstacle
