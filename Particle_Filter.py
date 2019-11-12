@@ -4,6 +4,7 @@ import pandas as pd
 import statistics
 import random
 import sklearn as sk
+import scipy.stats
 
 
 class ParticleFilter:
@@ -252,5 +253,30 @@ class ParticleFilter:
 					self.particles[i][2] <= 0 or self.particles[i][2] >= max_y):
 
 					self.particles[i][:] = nan_vec #outside map
-				elif not self.grid_map(ind_row, ind_col) == 0:
+
+				elif not self.grid_map(ind_row, ind_col) == 0 :
 					self.particles[i][:] = nan_vec #inside obstacle
+
+
+
+	def weight_computation(self, particle_vector, measurements_vector):
+
+		if not len(particle_vector) == len(measurements_vector):
+			RuntimeError('measurements from Lidar must have same resolution of particle filter!')
+
+		weight = 1
+
+		for i in range(len(particle_vector)):
+			if np.isnan(particle_vector[i]) or np.isnan(measurements_vector[i]):
+				continue
+
+			difference = abs(particle_vector[i]-measurements_vector[i]) #assume mm
+
+			prob = scipy.stats.norm(0, self.sigma_measure).pdf(difference)
+
+			#correct way but very slow:
+			#prob = 1-(cdf('Normal',difference,0,this_loc.sigma_measure)-cdf('Normal',-difference,0,this_loc.sigma_measure));
+
+			weight = weight*prob
+
+		return weight
