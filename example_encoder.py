@@ -8,6 +8,10 @@ import math
 class Encoder(Thread):
 	GPIO.setmode(GPIO.BCM)
 
+	px =0
+	py =0
+	ptheta = 0
+
 	leftDistance = 0
 	rightDistance = 0
 

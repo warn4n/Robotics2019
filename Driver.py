@@ -4,6 +4,7 @@ import example_motor
 import PID
 import numpy as np
 import math
+import Lidar
 
 if __name__ == "__main__":
     encoder = example_encoder.Encoder()
@@ -20,6 +21,9 @@ if __name__ == "__main__":
     PIDRight.Ki = .25
     PIDRight.Kp = .25
 
+    lidar = Lidar.Lidar()
+
+
     def turn(angle):
         encoder.rightDistance = 0
         encoder.leftDistance = 0
@@ -32,8 +36,8 @@ if __name__ == "__main__":
             measuredPhiDotLeft = -1*encoder.getPhiDotLeft()
             measuredPhiDotRight = encoder.getPhiDotRight()
 
-            PIDleft.control(.8, measuredPhiDotLeft, motors.setPhiDotDesiredLeft)
-            PIDRight.control(-.8, measuredPhiDotRight, motors.setPhiDotDesiredRight)
+            PIDleft.control(-.8, measuredPhiDotLeft, motors.setPhiDotDesiredLeft)
+            PIDRight.control(.8, measuredPhiDotRight, motors.setPhiDotDesiredRight)
 
             # motors.PID(1,measuredPhiDotLeft,1.5,motors.setPhiDotDesiredLeft)
             # motors.PID(1,measuredPhiDotRight, 1.5, motors.setPhiDotDesiredRight)
@@ -52,28 +56,27 @@ if __name__ == "__main__":
             measuredPhiDotLeft = -1*encoder.getPhiDotLeft()
             measuredPhiDotRight = encoder.getPhiDotRight()
 
-            PIDleft.control(1, measuredPhiDotLeft, motors.setPhiDotDesiredLeft)
-            PIDRight.control(1, measuredPhiDotRight, motors.setPhiDotDesiredRight)
+            PIDleft.control(1.5, measuredPhiDotLeft, motors.setPhiDotDesiredLeft)
+            PIDRight.control(1.5, measuredPhiDotRight, motors.setPhiDotDesiredRight)
 
-            # motors.PID(1,measuredPhiDotLeft,1.5,motors.setPhiDotDesiredLeft)
-            # motors.PID(1,measuredPhiDotRight, 1.5, motors.setPhiDotDesiredRight)
-            print("Phi Dot Right is: " + str(measuredPhiDotRight))
-            print("Phi Dot Left is: " + str(measuredPhiDotLeft))
+            motors.PID(1,measuredPhiDotLeft,1.5,motors.setPhiDotDesiredLeft)
+            motors.PID(1,measuredPhiDotRight, 1.5, motors.setPhiDotDesiredRight)
+            #print("Phi Dot Right is: " + str(measuredPhiDotRight))
+            #print("Phi Dot Left is: " + str(measuredPhiDotLeft))
 
         print("left Dist " + str(encoder.leftDistance))
         print("rightt Dist " + str(encoder.rightDistance))
 
-
-
-    #while True:
-    Forward(100)
-    turn(95)
-    Forward(100)
-    turn(95)
-    Forward(100)
-    turn(95)
-    Forward(100)
-    turn(95)
+    lidar.ml = motors
+    lidar.start()
+    Forward(1000)
+    # turn(95)
+    # Forward(100)
+    # turn(95)
+    # Forward(100)
+    # turn(95)
+    # Forward(100)
+    # turn(95)
     # for x in range(50):
     #     time.sleep(.05)
     #     measuredPhiDotLeft = encoder.getPhiDotLeft()
