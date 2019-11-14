@@ -5,11 +5,12 @@ import numpy as np
 def ray_tracing(x_pos, y_pos, direction, gridmap, cell_size):
 
     # Set Max Row/Col to Extremities
-    [max_row, max_col] = size(gridmap)
+    max_row = len(gridmap)
+    max_col = len(gridmap[0])
 
     # Set Start Row/Col based on Current Location
-    start_row = math.floor(y_pos / cell_size) + 1
-    start_col = math.floor(x_pos / cell_size) + 1
+    start_row = math.floor(y_pos / cell_size)
+    start_col = math.floor(x_pos / cell_size)
 
     # Wrap Direction to 360 Degrees
     direction = direction % 360
@@ -47,7 +48,7 @@ def ray_tracing(x_pos, y_pos, direction, gridmap, cell_size):
     current_y = y_pos + delta_y1
 
     current_row = start_row + inc_row
-    current_col = math.floor(current_x / cell_size) + 1
+    current_col = math.floor(current_x / cell_size)
 
     while True:
         if current_col < 1 or current_col > max_col:
@@ -65,7 +66,7 @@ def ray_tracing(x_pos, y_pos, direction, gridmap, cell_size):
 
         current_x = current_x + x_step
         current_y = current_y + y_step
-        current_col = math.floor(current_x / cell_size) + 1
+        current_col = math.floor(current_x / cell_size)
         current_row = current_row + inc_row
 
     ########################################
@@ -85,7 +86,7 @@ def ray_tracing(x_pos, y_pos, direction, gridmap, cell_size):
     current_y = y_pos + delta_y1
 
     current_col = start_col + inc_col
-    current_row = math.floor(current_y / cell_size) + 1
+    current_row = math.floor(current_y / cell_size)
 
     while True:
         if current_row < 1 or current_row > max_row:
@@ -103,7 +104,7 @@ def ray_tracing(x_pos, y_pos, direction, gridmap, cell_size):
 
         current_x = current_x + x_step
         current_y = current_y + y_step
-        current_row = math.floor(current_y / cell_size) + 1
+        current_row = math.floor(current_y / cell_size)
         current_row = current_row + inc_col
 
     #####################
@@ -117,11 +118,7 @@ def ray_tracing(x_pos, y_pos, direction, gridmap, cell_size):
 
     if min_index == 0:
         distance = dist_h
-        end_point_x = x_intersection_h
-        end_point_y = y_intersection_h
     else:
         distance = dist_v
-        end_point_x = x_intersection_v
-        end_point_y = y_intersection_v
 
-    return distance, end_point_x, end_point_y
+    return distance
