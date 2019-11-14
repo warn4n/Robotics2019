@@ -200,6 +200,14 @@ class ParticleFilter:
         my_list = [dist_h, dist_v]
         min_index = my_list.index(min(my_list))
 
+        if np.isnan(dist_h):
+            assert not np.isnan(dist_v)
+            return dist_v
+
+        if np.isnan(dist_v):
+            assert not np.isnan(dist_h)
+            return dist_h
+
         if min_index == 0:
             distance = dist_h
         else:
@@ -385,8 +393,11 @@ class ParticleFilter:
     def update_estimation(self):
 
         # COULD USE MODE, MUCH FASTER, SEE WHAT THE PROBLEM REQUIRES
-        [vec_pos, c_pos] = k_means(X=self.particles[:][0:2], n_clusters=2)
-        [vec_th, c_th] = k_means(X=self.particles[:][2], n_clusters=2)
+
+        [vec_pos, c_pos] = k_means(X=self.particles[:,0:2], n_clusters=2)
+        #test = k_means(X=self.particles[:,0:2], n_clusters=2)
+        [vec_th, c_th] = k_means(X=self.particles[2,:], n_clusters=2)
+        #test1 = k_means(X=self.particles[2,:], n_clusters=2)
 
         ind_pos = statistics.mode(vec_pos)
         ind_th = statistics.mode(vec_th)
