@@ -6,6 +6,7 @@ import random
 from sklearn.cluster import k_means
 import scipy.stats
 import matplotlib.pyplot as plt
+import warnings
 
 
 class ParticleFilter:
@@ -220,6 +221,48 @@ class ParticleFilter:
 
     # PLOT MAP
     # SHOW LOCATION
+    def reinit_particles(self):
+
+        numNewNeeded = self.n_samples - len(self.particles[:])
+        print("new rows created: " + str(numNewNeeded))
+
+
+        weight = 1 / self.n_samples
+        max_x = 0.99998 * (self.cols * self.cell_size)
+        max_y = 0.99998 * (self.rows * self.cell_size)
+
+        particle = []
+
+        for i in range(numNewNeeded):
+
+            particle.append(max_x * random.uniform(0, 1.0) + 0.00001)
+            particle.append(max_y * random.uniform(0, 1.0) + 0.00001)
+            particle.append(359 * random.uniform(0, 1.0))
+            particle.append(weight)
+
+            ind_row = math.floor(particle[1] / self.cell_size)
+            ind_col = math.floor(particle[0] / self.cell_size)
+
+            while self.grid_map[ind_row, ind_col] != 0:
+                particle[0] = max_x * random.uniform(0, 1) + 0.00001
+                particle[1] = max_y * random.uniform(0, 1) + 0.00001
+                #self.particles[i][0] = max_x * 0.707
+                #self.particles[i][1] = max_y * 0.707
+
+                ind_row = math.floor(particle[1] / self.cell_size)
+                ind_col = math.floor(particle[0] / self.cell_size)
+
+            particle = np.array(particle)
+            vector_scans = self.get_scans(particle[0], particle[1], particle[2])
+            particle = np.append(particle,vector_scans)
+
+            self.particles = np.append(self.particles,[particle],axis=0)
+            particle = []
+
+
+        # if this method works all removed particles should be replaced
+        assert len(self.particles[:]) == self.n_samples
+
 
     def init_particles(self):
 
@@ -231,22 +274,22 @@ class ParticleFilter:
 
         for i in range(self.n_samples):
 
-            # self.particles[i][0] = max_x * random.uniform(0, 1.0) + 0.00001
-            # self.particles[i][1] = max_y * random.uniform(0, 1.0) + 0.00001
-            # self.particles[i][2] = 359 * random.uniform(0, 1.0)
-            self.particles[i][0] = max_x * 0.707
-            self.particles[i][1] = max_y * 0.707
-            self.particles[i][2] = 359 * 0.707
+            self.particles[i][0] = max_x * random.uniform(0, 1.0) + 0.00001
+            self.particles[i][1] = max_y * random.uniform(0, 1.0) + 0.00001
+            self.particles[i][2] = 359 * random.uniform(0, 1.0)
+            #self.particles[i][0] = max_x * 0.707
+            #self.particles[i][1] = max_y * 0.707
+            #self.particles[i][2] = 359 * 0.707
             self.particles[i][3] = weight
 
             ind_row = math.floor(self.particles[i][1] / self.cell_size)
             ind_col = math.floor(self.particles[i][0] / self.cell_size)
 
             while self.grid_map[ind_row, ind_col] != 0:
-                # self.particles[i][0] = max_x * random.uniform(0, 1) + 0.00001
-                # self.particles[i][1] = max_y * random.uniform(0, 1) + 0.00001
-                self.particles[i][0] = max_x * 0.707
-                self.particles[i][1] = max_y * 0.707
+                self.particles[i][0] = max_x * random.uniform(0, 1) + 0.00001
+                self.particles[i][1] = max_y * random.uniform(0, 1) + 0.00001
+                #self.particles[i][0] = max_x * 0.707
+                #self.particles[i][1] = max_y * 0.707
 
                 ind_row = math.floor(self.particles[i][1] / self.cell_size)
                 ind_col = math.floor(self.particles[i][0] / self.cell_size)
@@ -288,10 +331,16 @@ class ParticleFilter:
             elif self.grid_map[ind_row, ind_col] != 0:
                 self.particles[i][:] = nan_vec  # inside obstacle
 
+        if np.isnan(self.particles).all():
+            self.init_particles()
+            warnings.warn('All particles are set to NaN all in wall or out of bounds, all particles reinit',)
+
+
+
     def weight_computation(self, particle_vector, measurements_vector):
 
         if not len(particle_vector) == len(measurements_vector):
-            RuntimeError('Lidar measurements must have same resolution of particle filter!')
+            raise RuntimeError('Lidar measurements must have same resolution of particle filter!')
 
         weight = 1
 
@@ -303,6 +352,7 @@ class ParticleFilter:
             prob = scipy.stats.norm(0, self.sigma_measure).pdf(difference)
             weight = weight * prob
 
+        #print(weight)
         return weight
 
     def re_sample(self, measurements_vec):
@@ -314,7 +364,11 @@ class ParticleFilter:
 
         new_particles = np.full([self.n_samples, 4 + self.n_angles], np.nan)
 
+        #removing nan rows without replacement is no good
         self.particles = self.particles[~np.isnan(self.particles).all(axis=1)]  # replace full nan rows
+
+        #randomly add back in particles that were put off the map or in an obby
+        self.reinit_particles()
 
         for i in range(len(self.particles[:])):
             self.particles[i][3] = self.weight_computation(self.particles[i][4:], measurements_vec)
@@ -385,24 +439,24 @@ class ParticleFilter:
 
         for i in range(index, self.n_samples):
 
-            # new_particles[i][2] = 359 * random.uniform(0, 1)
-            new_particles[i][2] = 359 * 0.707
+            new_particles[i][2] = 359 * random.uniform(0, 1)
+            #new_particles[i][2] = 359 * 0.707
 
             new_particles[i][3] = weight
 
-            # new_particles[i][0] = max_x_gen * random.uniform(0, 1) + 0.00001
-            # new_particles[i][1] = max_y_gen * random.uniform(0, 1) + 0.00001
-            new_particles[i][0] = max_x_gen * 0.707
-            new_particles[i][1] = max_y_gen * 0.707
+            new_particles[i][0] = max_x_gen * random.uniform(0, 1) + 0.00001
+            new_particles[i][1] = max_y_gen * random.uniform(0, 1) + 0.00001
+            #new_particles[i][0] = max_x_gen * 0.707
+            #new_particles[i][1] = max_y_gen * 0.707
 
             ind_row = math.floor(new_particles[i][1] / self.cell_size)
             ind_col = math.floor(new_particles[i][0] / self.cell_size)
 
             while self.grid_map[ind_row][ind_col] != 0:
-                # new_particles[i][0] = max_x_gen * random.uniform(0, 1) + 0.00001
-                # new_particles[i][1] = max_y_gen * random.uniform(0, 1) + 0.00001
-                new_particles[i][0] = max_x_gen * 0.707
-                new_particles[i][1] = max_y_gen * 0.707
+                new_particles[i][0] = max_x_gen * random.uniform(0, 1) + 0.00001
+                new_particles[i][1] = max_y_gen * random.uniform(0, 1) + 0.00001
+                #new_particles[i][0] = max_x_gen * 0.707
+                #new_particles[i][1] = max_y_gen * 0.707
                 ind_row = math.floor(new_particles[i][1] / self.cell_size)
                 ind_col = math.floor(new_particles[i][0] / self.cell_size)
 

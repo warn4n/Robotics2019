@@ -79,12 +79,12 @@ if __name__ == "__main__":
     file_name = 'test_map.csv'
     cell_resolution = 50
     num_scans = 8
-    num_particles = 100
-    resampling = 0.1
-    sigma_measure = 0  #50
-    sigma_pose = 0  #10
-    sigma_angle = 0  #4
-    sigma_noise = 0  #30
+    num_particles = 300
+    resampling = 0.3
+    sigma_measure = 70
+    sigma_pose = 15
+    sigma_angle = 7
+    sigma_noise = .001
 
     # Instantiate Particle Filter
     a = Pf.ParticleFilter(file_name, cell_resolution, num_scans, num_particles, resampling, sigma_measure,
@@ -110,5 +110,5 @@ if __name__ == "__main__":
 
         a.update_state(dx, dy, dth, measures)
 
-        # print("Actual Pose: (", x, ", ", y, ", ", th, ")")
+        print("Actual Pose: (", x, ", ", y, ", ", th, ")")
         print("Estimated Pose: (", a.x_pos, ", ", a.y_pos, ", ", a.th_pos, ")")
