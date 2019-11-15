@@ -76,15 +76,15 @@ def buffer_array(array, size):
 
 if __name__ == "__main__":
 
-    file_name = 'test_map2.csv'
+    file_name = 'test_map.csv'
     cell_resolution = 50
     num_scans = 8
-    num_particles = 1000
+    num_particles = 100
     resampling = 0.1
-    sigma_measure = 1  #50
-    sigma_pose = 1  #10
-    sigma_angle = 1  #4
-    sigma_noise = 1  #30
+    sigma_measure = 0  #50
+    sigma_pose = 0  #10
+    sigma_angle = 0  #4
+    sigma_noise = 0  #30
 
     # Instantiate Particle Filter
     a = Pf.ParticleFilter(file_name, cell_resolution, num_scans, num_particles, resampling, sigma_measure,
@@ -93,12 +93,12 @@ if __name__ == "__main__":
     # Define Start Pose
     x = 5*cell_resolution
     y = 45*cell_resolution
-    th = 90
+    th = 91
 
     # Define Deltas (Not Constant in Real Life)
     dx = 1*cell_resolution
     dy = 1*cell_resolution
-    dth = 0
+    dth = 1
 
     for i in range(50):
         x = x + dx
@@ -109,9 +109,6 @@ if __name__ == "__main__":
         measures = measures + np.random.normal(0, sigma_noise, a.n_angles)
 
         a.update_state(dx, dy, dth, measures)
-        est_x = a.x_pos
-        est_y = a.y_pos
-        est_th = a.th_pos
 
-        print("Actual Pose: (", x, ", ", y, ", ", th, ")")
-        print("Estimated Pose: (", est_x, ", ", est_y, ", ", est_th, ")")
+        # print("Actual Pose: (", x, ", ", y, ", ", th, ")")
+        print("Estimated Pose: (", a.x_pos, ", ", a.y_pos, ", ", a.th_pos, ")")

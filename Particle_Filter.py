@@ -19,8 +19,8 @@ class ParticleFilter:
     def __init__(self, file_name, cell_size, n_angles, n_samples, resample_rate, sigma_measure, sigma_resample_pos,
                  sigma_resample_angle):
         self.grid_map = genfromtxt(file_name, delimiter=',')  # read in file_name and store as numpy array
-        self.pad_border()
-        self.buffer_map(0)
+        # self.pad_border()
+        # self.buffer_map(0)
 
         self.cell_size = cell_size
         self.n_angles = n_angles
@@ -119,9 +119,9 @@ class ParticleFilter:
         # Get Horizontal Scan and Intersection #
         ########################################
         if inc_row > 0:
-            delta_y1 = self.cell_size * start_row - y_pos
+            delta_y1 = self.cell_size * (start_row + 1) - y_pos
         else:
-            delta_y1 = self.cell_size * (start_row - 1) - y_pos
+            delta_y1 = self.cell_size * start_row - y_pos
 
         delta_x1 = delta_y1 / math.tan(direction * np.pi / 180)
 
@@ -157,9 +157,9 @@ class ParticleFilter:
         # Get Vertical Scan and Intersection #
         ########################################
         if inc_col > 0:
-            delta_x1 = self.cell_size * start_col - x_pos
+            delta_x1 = self.cell_size * (start_col + 1) - x_pos
         else:
-            delta_x1 = self.cell_size * (start_col - 1) - x_pos
+            delta_x1 = self.cell_size * start_col - x_pos
 
         delta_y1 = delta_x1 * math.tan(direction * np.pi / 180)
 
@@ -200,6 +200,9 @@ class ParticleFilter:
         my_list = [dist_h, dist_v]
         min_index = my_list.index(min(my_list))
 
+        if np.isnan(dist_h) and np.isnan(dist_v):
+            return np.nan
+
         if np.isnan(dist_h):
             assert not np.isnan(dist_v)
             return dist_v
@@ -231,10 +234,9 @@ class ParticleFilter:
             # self.particles[i][0] = max_x * random.uniform(0, 1.0) + 0.00001
             # self.particles[i][1] = max_y * random.uniform(0, 1.0) + 0.00001
             # self.particles[i][2] = 359 * random.uniform(0, 1.0)
-            self.particles[i][0] = max_x * 0.707 + 0.00001
-            self.particles[i][1] = max_y * 0.707 + 0.00001
+            self.particles[i][0] = max_x * 0.707
+            self.particles[i][1] = max_y * 0.707
             self.particles[i][2] = 359 * 0.707
-
             self.particles[i][3] = weight
 
             ind_row = math.floor(self.particles[i][1] / self.cell_size)
@@ -243,8 +245,8 @@ class ParticleFilter:
             while self.grid_map[ind_row, ind_col] != 0:
                 # self.particles[i][0] = max_x * random.uniform(0, 1) + 0.00001
                 # self.particles[i][1] = max_y * random.uniform(0, 1) + 0.00001
-                self.particles[i][0] = max_x * 0.707 + 0.00001
-                self.particles[i][1] = max_y * 0.707 + 0.00001
+                self.particles[i][0] = max_x * 0.707
+                self.particles[i][1] = max_y * 0.707
 
                 ind_row = math.floor(self.particles[i][1] / self.cell_size)
                 ind_col = math.floor(self.particles[i][0] / self.cell_size)
@@ -312,9 +314,9 @@ class ParticleFilter:
 
         new_particles = np.full([self.n_samples, 4 + self.n_angles], np.nan)
 
-        np.where(np.isnan(self.particles[:][3]), None, self.particles[:][3])
+        self.particles = self.particles[~np.isnan(self.particles).all(axis=1)]  # replace full nan rows
 
-        for i in range(np.size(self.particles[:][0])):
+        for i in range(len(self.particles[:])):
             self.particles[i][3] = self.weight_computation(self.particles[i][4:], measurements_vec)
 
         total_weight = 0
@@ -322,22 +324,17 @@ class ParticleFilter:
             if self.particles[i][3] != np.nan:
                 total_weight = total_weight + self.particles[i][3]
 
-        # total_weight = np.nansum(self.particles[:][3])
         for i in range(self.n_samples):
             self.particles[i][3] = round((self.particles[i][3] / total_weight) * n_old_samples)
-        # self.particles[:][3] = round((self.particles[:][3] / total_weight) * n_old_samples)
 
         index = 0
         weight = 1 / self.n_samples
 
-        for i in range(np.size(self.particles[:][3])):
+        for i in range(self.n_samples):
             for j in range(np.size(self.particles[i][3])):
-                # thth = np.random.normal(self.particles[i][2], self.sigma_resample_angle) % 360
-                # xx = abs(np.random.normal(self.particles[i][0], self.sigma_resample_pos))
-                # yy = abs(np.random.normal(self.particles[i][1], self.sigma_resample_pos))
-                thth = np.mean(self.particles[i][2])
-                xx = np.mean(self.particles[i][0])
-                yy = np.mean(self.particles[i][1])
+                thth = np.random.normal(self.particles[i][2], self.sigma_resample_angle) % 360
+                xx = abs(np.random.normal(self.particles[i][0], self.sigma_resample_pos))
+                yy = abs(np.random.normal(self.particles[i][1], self.sigma_resample_pos))
 
                 if xx > max_x_gen:
                     xx = max_x_gen
@@ -357,11 +354,8 @@ class ParticleFilter:
 
                 while self.grid_map[ind_row][ind_col] != 0:
 
-                    # xx = abs(np.random.normal(self.particles[i][0], self.sigma_resample_pos))
-                    # yy = abs(np.random.normal(self.particles[i][1], self.sigma_resample_pos))
-
-                    xx = np.mean(self.particles[i][0])
-                    yy = np.mean(self.particles[i][1])
+                    xx = abs(np.random.normal(self.particles[i][0], self.sigma_resample_pos))
+                    yy = abs(np.random.normal(self.particles[i][1], self.sigma_resample_pos))
 
                     if xx > max_x_gen:
                         xx = max_x_gen
@@ -423,9 +417,9 @@ class ParticleFilter:
         # COULD USE MODE, MUCH FASTER, SEE WHAT THE PROBLEM REQUIRES
 
         # [vec_pos, c_pos] = k_means(X=self.particles[:,0:2], n_clusters=2)
-        pos_centroid = k_means(X=self.particles[:,0:2], n_clusters=1)
+        pos_centroid = k_means(X=self.particles[:, 0:2], n_clusters=1)
         # [vec_th, c_th] = k_means(X=self.particles[2,:], n_clusters=2)
-        theta_centroid = k_means(X=self.particles[:,2].reshape(-1, 1), n_clusters=1)
+        theta_centroid = k_means(X=self.particles[:, 2].reshape(-1, 1), n_clusters=1)
 
         # ind_pos = statistics.mode(vec_pos)
         # ind_th = statistics.mode(vec_th)

@@ -27,9 +27,9 @@ def ray_tracing(x_pos, y_pos, direction, gridmap, cell_size):
     # Get Horizontal Scan and Intersection #
     ########################################
     if inc_row > 0:
-        delta_y1 = cell_size * start_row - y_pos
+        delta_y1 = cell_size * (start_row + 1)- y_pos
     else:
-        delta_y1 = cell_size * (start_row - 1) - y_pos
+        delta_y1 = cell_size * start_row - y_pos
 
     delta_x1 = delta_y1 / math.tan(direction * np.pi / 180)
 
@@ -65,9 +65,9 @@ def ray_tracing(x_pos, y_pos, direction, gridmap, cell_size):
     # Get Vertical Scan and Intersection #
     ########################################
     if inc_col > 0:
-        delta_x1 = cell_size * start_col - x_pos
+        delta_x1 = cell_size * (start_col + 1) - x_pos
     else:
-        delta_x1 = cell_size * (start_col - 1) - x_pos
+        delta_x1 = cell_size * start_col - x_pos
 
     delta_y1 = delta_x1 * math.tan(direction * np.pi / 180)
 
