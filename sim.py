@@ -79,16 +79,16 @@ if __name__ == "__main__":
     file_name = 'test_map.csv'
     cell_resolution = 50
     num_scans = 8
-    num_particles = 300
-    resampling = 0.3
-    sigma_measure = 70
-    sigma_pose = 15
-    sigma_angle = 7
-    sigma_noise = .001
+    num_particles = 200
+    resampling = 0.2
+    sigma_measure = 25
+    sigma_pos = 5
+    sigma_angle = 2
+    sigma_noise = 15
 
     # Instantiate Particle Filter
     a = Pf.ParticleFilter(file_name, cell_resolution, num_scans, num_particles, resampling, sigma_measure,
-                          sigma_pose, sigma_angle)
+                          sigma_pos, sigma_angle)
 
     # Define Start Pose
     x = 5*cell_resolution
