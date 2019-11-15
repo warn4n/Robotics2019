@@ -76,47 +76,28 @@ def buffer_array(array, size):
 
 if __name__ == "__main__":
 
-    file_name = 'test_map.csv'
+    file_name = 'test_map2.csv'
     cell_resolution = 50
     num_scans = 8
     num_particles = 1000
     resampling = 0.1
-    sigma_measure = 50
-    sigma_pose = 10
-    sigma_angle = 4
-    sigma_noise = 30
+    sigma_measure = 1  #50
+    sigma_pose = 1  #10
+    sigma_angle = 1  #4
+    sigma_noise = 1  #30
 
     # Instantiate Particle Filter
     a = Pf.ParticleFilter(file_name, cell_resolution, num_scans, num_particles, resampling, sigma_measure,
                           sigma_pose, sigma_angle)
 
-    # Read CSV
-    occ = pd.read_csv('test_map.csv').values
-
-    # Pad Array with Border
-    occ = np.pad(occ, pad_width=1, mode='constant', constant_values=1)
-
-    # Turn on Interactive Mode
-    plt.ion()
-
-    # Define Figure and Plot Initial State
-    fig = plt.figure()
-
-    # Buffer Obstacles
-    occ = buffer_array(occ, 3)
-
-    # Plot Base Map
-    update_map(plt, occ)
-    show_map(fig)
-
     # Define Start Pose
-    x = 5
-    y = 5
-    th = 0
+    x = 5*cell_resolution
+    y = 45*cell_resolution
+    th = 90
 
     # Define Deltas (Not Constant in Real Life)
-    dx = 1
-    dy = 1
+    dx = 1*cell_resolution
+    dy = 1*cell_resolution
     dth = 0
 
     for i in range(50):
@@ -125,7 +106,7 @@ if __name__ == "__main__":
         th = th + dth
 
         measures = scan.get_scans_vector(a.grid_map, a.n_angles, a.cell_size, x, y, th)
-        measures = measures + np.random.normal(0, sigma_noise, [1, a.n_angles])
+        measures = measures + np.random.normal(0, sigma_noise, a.n_angles)
 
         a.update_state(dx, dy, dth, measures)
         est_x = a.x_pos

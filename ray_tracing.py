@@ -19,17 +19,9 @@ def ray_tracing(x_pos, y_pos, direction, gridmap, cell_size):
     if direction == 90 or direction == 180 or direction == 0 or direction == 360 or direction == 270:
         direction = (direction + np.spacing(1000)) % 360
 
-    # Check if Position is Outside of Map *
-    if start_row < 1 or start_row > max_row or start_col < 1 or start_col > max_col:
-        RuntimeError('Location outside of map!')
-
-    # Check if We Start Inside an Obstacle *
-    if gridmap[start_row][start_col] != 0:
-        RuntimeError('Location outside of map!')
-
     # Determine the Quadrant of The Direction
-    inc_col = np.sign(math.cos(direction * np.pi / 180))
-    inc_row = np.sign(math.sin(direction * np.pi / 180))
+    inc_col = int(np.sign(math.cos(direction * np.pi / 180)))
+    inc_row = int(np.sign(math.sin(direction * np.pi / 180)))
 
     ########################################
     # Get Horizontal Scan and Intersection #
@@ -51,15 +43,15 @@ def ray_tracing(x_pos, y_pos, direction, gridmap, cell_size):
     current_col = math.floor(current_x / cell_size)
 
     while True:
-        if current_col < 1 or current_col > max_col:
+        if current_col < 0 or current_col >= max_col:
             x_intersection_h = np.nan
             y_intersection_h = np.nan
             break
-        elif current_row < 1 or current_row > max_row:
+        elif current_row < 0 or current_row >= max_row:
             x_intersection_h = current_x
             y_intersection_h = current_y
             break
-        elif gridmap(current_row, current_col) != 0:
+        elif gridmap[current_row, current_col] != 0:
             x_intersection_h = current_x
             y_intersection_h = current_y
             break
@@ -89,15 +81,15 @@ def ray_tracing(x_pos, y_pos, direction, gridmap, cell_size):
     current_row = math.floor(current_y / cell_size)
 
     while True:
-        if current_row < 1 or current_row > max_row:
+        if current_row < 0 or current_row >= max_row:
             x_intersection_v = np.nan
             y_intersection_v = np.nan
             break
-        elif current_col < 1 or current_col > max_col:
+        elif current_col < 0 or current_col >= max_col:
             x_intersection_v = current_x
             y_intersection_v = current_y
             break
-        elif gridmap(current_row, current_col) != 0:
+        elif gridmap[current_row, current_col] != 0:
             x_intersection_v = current_x
             y_intersection_v = current_y
             break
@@ -105,7 +97,7 @@ def ray_tracing(x_pos, y_pos, direction, gridmap, cell_size):
         current_x = current_x + x_step
         current_y = current_y + y_step
         current_row = math.floor(current_y / cell_size)
-        current_row = current_row + inc_col
+        current_col = current_col + inc_col
 
     #####################
     # COMPUTE DISTANCES #
@@ -115,6 +107,14 @@ def ray_tracing(x_pos, y_pos, direction, gridmap, cell_size):
 
     my_list = [dist_h, dist_v]
     min_index = my_list.index(min(my_list))
+
+    if np.isnan(dist_h):
+        assert not np.isnan(dist_v)
+        return dist_v
+
+    if np.isnan(dist_v):
+        assert not np.isnan(dist_h)
+        return dist_h
 
     if min_index == 0:
         distance = dist_h

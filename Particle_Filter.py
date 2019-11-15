@@ -20,7 +20,7 @@ class ParticleFilter:
                  sigma_resample_angle):
         self.grid_map = genfromtxt(file_name, delimiter=',')  # read in file_name and store as numpy array
         self.pad_border()
-        self.buffer_map(1)
+        self.buffer_map(0)
 
         self.cell_size = cell_size
         self.n_angles = n_angles
@@ -228,17 +228,23 @@ class ParticleFilter:
 
         for i in range(self.n_samples):
 
-            self.particles[i][0] = max_x * random.uniform(0, 1.0) + 0.00001
-            self.particles[i][1] = max_y * random.uniform(0, 1.0) + 0.00001
-            self.particles[i][2] = 359 * random.uniform(0, 1.0)
+            # self.particles[i][0] = max_x * random.uniform(0, 1.0) + 0.00001
+            # self.particles[i][1] = max_y * random.uniform(0, 1.0) + 0.00001
+            # self.particles[i][2] = 359 * random.uniform(0, 1.0)
+            self.particles[i][0] = max_x * 0.707 + 0.00001
+            self.particles[i][1] = max_y * 0.707 + 0.00001
+            self.particles[i][2] = 359 * 0.707
+
             self.particles[i][3] = weight
 
             ind_row = math.floor(self.particles[i][1] / self.cell_size)
             ind_col = math.floor(self.particles[i][0] / self.cell_size)
 
             while self.grid_map[ind_row, ind_col] != 0:
-                self.particles[i][0] = max_x * random.uniform(0, 1) + 0.00001
-                self.particles[i][1] = max_y * random.uniform(0, 1) + 0.00001
+                # self.particles[i][0] = max_x * random.uniform(0, 1) + 0.00001
+                # self.particles[i][1] = max_y * random.uniform(0, 1) + 0.00001
+                self.particles[i][0] = max_x * 0.707 + 0.00001
+                self.particles[i][1] = max_y * 0.707 + 0.00001
 
                 ind_row = math.floor(self.particles[i][1] / self.cell_size)
                 ind_col = math.floor(self.particles[i][0] / self.cell_size)
@@ -262,7 +268,7 @@ class ParticleFilter:
 
         max_x = self.cols * self.cell_size
         max_y = self.rows * self.cell_size
-        nan_vec = np.full([1, 4 + self.n_angles], np.nan)
+        nan_vec = np.full(4 + self.n_angles, np.nan)
 
         for i in range(self.n_samples):
             self.particles[i][0] = self.particles[i][0] + delta_x
@@ -277,7 +283,7 @@ class ParticleFilter:
 
                 self.particles[i][:] = nan_vec  # outside map
 
-            elif not self.grid_map[ind_row, ind_col] == 0:
+            elif self.grid_map[ind_row, ind_col] != 0:
                 self.particles[i][:] = nan_vec  # inside obstacle
 
     def weight_computation(self, particle_vector, measurements_vector):
@@ -304,24 +310,34 @@ class ParticleFilter:
 
         n_old_samples = round(self.n_samples * (1 - self.resample_rate))
 
-        new_particles = np.full(np.size(self.particles), np.nan)
+        new_particles = np.full([self.n_samples, 4 + self.n_angles], np.nan)
 
         np.where(np.isnan(self.particles[:][3]), None, self.particles[:][3])
 
         for i in range(np.size(self.particles[:][0])):
             self.particles[i][3] = self.weight_computation(self.particles[i][4:], measurements_vec)
 
-        total_weight = math.fsum(self.particles[:][3])
-        self.particles[:][3] = round((self.particles[:][3] / total_weight) * n_old_samples)
+        total_weight = 0
+        for i in range(self.n_samples):
+            if self.particles[i][3] != np.nan:
+                total_weight = total_weight + self.particles[i][3]
+
+        # total_weight = np.nansum(self.particles[:][3])
+        for i in range(self.n_samples):
+            self.particles[i][3] = round((self.particles[i][3] / total_weight) * n_old_samples)
+        # self.particles[:][3] = round((self.particles[:][3] / total_weight) * n_old_samples)
 
         index = 0
         weight = 1 / self.n_samples
 
         for i in range(np.size(self.particles[:][3])):
             for j in range(np.size(self.particles[i][3])):
-                thth = np.random.normal(self.particles[i][2], self.sigma_resample_angle) % 360
-                xx = abs(np.random.normal(self.particles[i][0], self.sigma_resample_pos))
-                yy = abs(np.random.normal(self.particles[i][1], self.sigma_resample_pos))
+                # thth = np.random.normal(self.particles[i][2], self.sigma_resample_angle) % 360
+                # xx = abs(np.random.normal(self.particles[i][0], self.sigma_resample_pos))
+                # yy = abs(np.random.normal(self.particles[i][1], self.sigma_resample_pos))
+                thth = np.mean(self.particles[i][2])
+                xx = np.mean(self.particles[i][0])
+                yy = np.mean(self.particles[i][1])
 
                 if xx > max_x_gen:
                     xx = max_x_gen
@@ -333,13 +349,19 @@ class ParticleFilter:
                 elif yy <= 0:
                     yy = 0.00001
 
+                if np.isnan(yy) or np.isnan(xx):
+                    print("")
+
                 ind_row = math.floor(yy / self.cell_size)
                 ind_col = math.floor(xx / self.cell_size)
 
                 while self.grid_map[ind_row][ind_col] != 0:
 
-                    xx = abs(np.random.normal(self.particles[i][0], self.sigma_resample_pos))
-                    yy = abs(np.random.normal(self.particles[i][1], self.sigma_resample_pos))
+                    # xx = abs(np.random.normal(self.particles[i][0], self.sigma_resample_pos))
+                    # yy = abs(np.random.normal(self.particles[i][1], self.sigma_resample_pos))
+
+                    xx = np.mean(self.particles[i][0])
+                    yy = np.mean(self.particles[i][1])
 
                     if xx > max_x_gen:
                         xx = max_x_gen
@@ -369,18 +391,24 @@ class ParticleFilter:
 
         for i in range(index, self.n_samples):
 
-            new_particles[i][2] = 359 * random.uniform(0, 1)
+            # new_particles[i][2] = 359 * random.uniform(0, 1)
+            new_particles[i][2] = 359 * 0.707
+
             new_particles[i][3] = weight
 
-            new_particles[i][0] = max_x_gen * random.uniform(0, 1) + 0.00001
-            new_particles[i][1] = max_y_gen * random.uniform(0, 1) + 0.00001
+            # new_particles[i][0] = max_x_gen * random.uniform(0, 1) + 0.00001
+            # new_particles[i][1] = max_y_gen * random.uniform(0, 1) + 0.00001
+            new_particles[i][0] = max_x_gen * 0.707
+            new_particles[i][1] = max_y_gen * 0.707
 
             ind_row = math.floor(new_particles[i][1] / self.cell_size)
             ind_col = math.floor(new_particles[i][0] / self.cell_size)
 
             while self.grid_map[ind_row][ind_col] != 0:
-                new_particles[i][0] = max_x_gen * random.uniform(0, 1) + 0.00001
-                new_particles[i][1] = max_y_gen * random.uniform(0, 1) + 0.00001
+                # new_particles[i][0] = max_x_gen * random.uniform(0, 1) + 0.00001
+                # new_particles[i][1] = max_y_gen * random.uniform(0, 1) + 0.00001
+                new_particles[i][0] = max_x_gen * 0.707
+                new_particles[i][1] = max_y_gen * 0.707
                 ind_row = math.floor(new_particles[i][1] / self.cell_size)
                 ind_col = math.floor(new_particles[i][0] / self.cell_size)
 
@@ -394,17 +422,17 @@ class ParticleFilter:
 
         # COULD USE MODE, MUCH FASTER, SEE WHAT THE PROBLEM REQUIRES
 
-        #[vec_pos, c_pos] = k_means(X=self.particles[:,0:2], n_clusters=2)
+        # [vec_pos, c_pos] = k_means(X=self.particles[:,0:2], n_clusters=2)
         pos_centroid = k_means(X=self.particles[:,0:2], n_clusters=1)
-        #[vec_th, c_th] = k_means(X=self.particles[2,:], n_clusters=2)
+        # [vec_th, c_th] = k_means(X=self.particles[2,:], n_clusters=2)
         theta_centroid = k_means(X=self.particles[:,2].reshape(-1, 1), n_clusters=1)
 
-        #ind_pos = statistics.mode(vec_pos)
-        #ind_th = statistics.mode(vec_th)
+        # ind_pos = statistics.mode(vec_pos)
+        # ind_th = statistics.mode(vec_th)
 
-        self.y_pos = pos_centroid[1]#c_pos[ind_pos][1]
-        self.x_pos = pos_centroid[0]#c_pos[ind_pos][0]
-        self.th_pos = theta_centroid[0]#c_th[ind_th]
+        self.y_pos = pos_centroid[0][0][1]  # c_pos[ind_pos][1]
+        self.x_pos = pos_centroid[0][0][0]  # c_pos[ind_pos][0]
+        self.th_pos = theta_centroid[0][0][0]  # c_th[ind_th]
 
     def update_state(self, delta_x, delta_y, delta_theta, distance_vec):
 
