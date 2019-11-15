@@ -394,17 +394,17 @@ class ParticleFilter:
 
         # COULD USE MODE, MUCH FASTER, SEE WHAT THE PROBLEM REQUIRES
 
-        [vec_pos, c_pos] = k_means(X=self.particles[:,0:2], n_clusters=2)
-        #test = k_means(X=self.particles[:,0:2], n_clusters=2)
-        [vec_th, c_th] = k_means(X=self.particles[2,:], n_clusters=2)
-        #test1 = k_means(X=self.particles[2,:], n_clusters=2)
+        #[vec_pos, c_pos] = k_means(X=self.particles[:,0:2], n_clusters=2)
+        pos_centroid = k_means(X=self.particles[:,0:2], n_clusters=1)
+        #[vec_th, c_th] = k_means(X=self.particles[2,:], n_clusters=2)
+        theta_centroid = k_means(X=self.particles[:,2].reshape(-1, 1), n_clusters=1)
 
-        ind_pos = statistics.mode(vec_pos)
-        ind_th = statistics.mode(vec_th)
+        #ind_pos = statistics.mode(vec_pos)
+        #ind_th = statistics.mode(vec_th)
 
-        self.y_pos = c_pos[ind_pos][1]
-        self.x_pos = c_pos[ind_pos][0]
-        self.th_pos = c_th[ind_th]
+        self.y_pos = pos_centroid[1]#c_pos[ind_pos][1]
+        self.x_pos = pos_centroid[0]#c_pos[ind_pos][0]
+        self.th_pos = theta_centroid[0]#c_th[ind_th]
 
     def update_state(self, delta_x, delta_y, delta_theta, distance_vec):
 
