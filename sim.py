@@ -1,8 +1,4 @@
-import pandas as pd
-import matplotlib.pyplot as plt
-import math
 import numpy as np
-# import time
 import get_scans_vector as scan
 import Particle_Filter as Pf
 
@@ -12,8 +8,8 @@ def show_map(figure):
     figure.canvas.flush_events()
 
 
-def update_map(plot, gridmap):
-    plot.imshow(gridmap, 'Greys')
+def update_map(plot, grid_map):
+    plot.imshow(grid_map, 'Greys')
 
 
 def buffer_array(array, size):
@@ -77,11 +73,11 @@ def buffer_array(array, size):
 if __name__ == "__main__":
 
     file_name = 'test_map2.csv'
-    cell_resolution = 50
+    cell_resolution = 25.4*2
     num_scans = 8
-    num_particles = 100
+    num_particles = 250
     resampling = 0.2
-    sigma_measure = 5  # 25
+    sigma_measure = 5
     sigma_pos = 5
     sigma_angle = 2
     sigma_noise = 15
@@ -89,7 +85,7 @@ if __name__ == "__main__":
     # Define Start Pose
     x = 5*cell_resolution
     y = 45*cell_resolution
-    th = 91
+    th = 90
 
     # Define Deltas (Not Constant in Real Life)
     dx = 0*cell_resolution
@@ -112,5 +108,5 @@ if __name__ == "__main__":
 
         a.update_state(dx, dy, dth, measures)
 
-        print("Actual Pose: (", x, ", ", y, ", ", th, ")")
-        print("Estimated Pose: (", a.x_pos, ", ", a.y_pos, ", ", a.th_pos, ")")
+        # print("Actual Pose: (", x, ", ", y, ", ", th, ")")
+        # print("Estimated Pose: (", a.x_pos, ", ", a.y_pos, ", ", a.th_pos, ")")
