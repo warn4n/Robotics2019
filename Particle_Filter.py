@@ -16,13 +16,13 @@ class ParticleFilter:
     y_pos = 0
     th_pos = 0
     particles = 0
+    fig = 0
+    plot = 0
 
     def __init__(self, file_name, cell_size, n_angles, n_samples, resample_rate, sigma_measure, sigma_resample_pos,
-                 sigma_resample_angle):
+                 sigma_resample_angle, start_x = None, start_y= None, start_th = None):
         self.grid_map = genfromtxt(file_name, delimiter=',')  # read in file_name and store as numpy array
-        # self.pad_border()
-        # self.buffer_map(0)
-
+        self.plot_map = self.grid_map
         self.cell_size = cell_size
         self.n_angles = n_angles
         self.angle_resolution = 360/n_angles
@@ -39,12 +39,25 @@ class ParticleFilter:
         # plt.imshow(self.grid_map, 'Greys')
         # fig.canvas.draw()
         # fig.canvas.flush_events()
-
-        self.init_particles()
+        self.init_plot()
+        self.init_particles(start_x=start_x, start_y=start_y, start_th=start_th)
         self.update_estimation()
+
+    def init_plot(self):
+        self.plot = plt
+        plt.ion()
+        self.fig = plt.figure()
 
     def pad_border(self):
         self.grid_map = np.pad(self.grid_map, pad_width=1, mode='constant', constant_values=1)
+
+    def update_map(self, x, y):
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
+        self.plot_map = np.copy(self.grid_map)
+        self.plot_map[int(y/self.cell_size), int(x/self.cell_size)] = 1
+        self.plot_map[int(self.y_pos/self.cell_size), int(self.x_pos/self.cell_size)] = 0.3
+        self.plot.imshow(self.plot_map, 'Greys')
 
     def buffer_map(self, size):
 
@@ -253,17 +266,15 @@ class ParticleFilter:
 
             particle = np.array(particle)
             vector_scans = self.get_scans(particle[0], particle[1], particle[2])
-            particle = np.append(particle,vector_scans)
+            particle = np.append(particle, vector_scans)
 
-            self.particles = np.append(self.particles,[particle],axis=0)
+            self.particles = np.append(self.particles, [particle], axis=0)
             particle = []
-
 
         # if this method works all removed particles should be replaced
         assert len(self.particles[:]) == self.n_samples
 
-
-    def init_particles(self):
+    def init_particles(self, start_x=None, start_y=None, start_th=None):
 
         self.particles = np.full([self.n_samples, 4 + self.n_angles], np.nan)
 
@@ -273,28 +284,35 @@ class ParticleFilter:
 
         for i in range(self.n_samples):
 
-            self.particles[i][0] = max_x * random.uniform(0, 1.0) + 0.00001
-            self.particles[i][1] = max_y * random.uniform(0, 1.0) + 0.00001
-            self.particles[i][2] = 359 * random.uniform(0, 1.0)
-            #self.particles[i][0] = max_x * 0.707
-            #self.particles[i][1] = max_y * 0.707
-            #self.particles[i][2] = 359 * 0.707
-            self.particles[i][3] = weight
+            if start_x is not None:
+                self.particles[i, 0] = start_x
+            else:
+                self.particles[i, 0] = max_x * random.uniform(0, 1.0) + 0.00001
+            if start_y is not None:
+                self.particles[i, 1] = start_y
+            else:
+                self.particles[i, 1] = max_y * random.uniform(0, 1.0) + 0.00001
+            if start_th is not None:
+                self.particles[i, 2] = start_th
+            else:
+                self.particles[i, 2] = 359 * random.uniform(0, 1.0)
 
-            ind_row = math.floor(self.particles[i][1] / self.cell_size)
-            ind_col = math.floor(self.particles[i][0] / self.cell_size)
+            self.particles[i, 3] = weight
+
+            ind_row = math.floor(self.particles[i, 1] / self.cell_size)
+            ind_col = math.floor(self.particles[i, 0] / self.cell_size)
 
             while self.grid_map[ind_row, ind_col] != 0:
-                self.particles[i][0] = max_x * random.uniform(0, 1) + 0.00001
-                self.particles[i][1] = max_y * random.uniform(0, 1) + 0.00001
-                #self.particles[i][0] = max_x * 0.707
-                #self.particles[i][1] = max_y * 0.707
+                self.particles[i, 0] = max_x * random.uniform(0, 1) + 0.00001
+                self.particles[i, 1] = max_y * random.uniform(0, 1) + 0.00001
+                # self.particles[i][0] = max_x * 0.707
+                # self.particles[i][1] = max_y * 0.707
 
-                ind_row = math.floor(self.particles[i][1] / self.cell_size)
-                ind_col = math.floor(self.particles[i][0] / self.cell_size)
+                ind_row = math.floor(self.particles[i, 1] / self.cell_size)
+                ind_col = math.floor(self.particles[i, 0] / self.cell_size)
 
-            vector_scans = self.get_scans(self.particles[i][0], self.particles[i][1], self.particles[i][2])
-            self.particles[i][4:] = vector_scans
+            vector_scans = self.get_scans(self.particles[i, 0], self.particles[i, 1], self.particles[i, 2])
+            self.particles[i, 4:] = vector_scans
 
     def get_scans(self, x, y, th):
 
@@ -315,24 +333,24 @@ class ParticleFilter:
         nan_vec = np.full(4 + self.n_angles, np.nan)
 
         for i in range(self.n_samples):
-            self.particles[i][0] = self.particles[i][0] + delta_x
-            self.particles[i][1] = self.particles[i][1] + delta_y
-            self.particles[i][2] = (self.particles[i][2] + delta_theta) % 360
+            self.particles[i, 0] = self.particles[i, 0] + delta_x
+            self.particles[i, 1] = self.particles[i, 1] + delta_y
+            self.particles[i, 2] = (self.particles[i, 2] + delta_theta) % 360
 
-            ind_row = math.floor(self.particles[i][1] / self.cell_size)
-            ind_col = math.floor(self.particles[i][0] / self.cell_size)
+            ind_row = math.floor(self.particles[i, 1] / self.cell_size)
+            ind_col = math.floor(self.particles[i, 0] / self.cell_size)
 
-            if (self.particles[i][0] < 0 or self.particles[i][0] >= max_x or
-                    self.particles[i][1] < 0 or self.particles[i][1] >= max_y):
+            if (self.particles[i, 0] < 0 or self.particles[i, 0] >= max_x or
+                    self.particles[i, 1] < 0 or self.particles[i, 1] >= max_y):
 
-                self.particles[i][:] = nan_vec  # outside map
+                self.particles[i, :] = nan_vec  # outside map
 
             elif self.grid_map[ind_row, ind_col] != 0:
-                self.particles[i][:] = nan_vec  # inside obstacle
+                self.particles[i, :] = nan_vec  # inside obstacle
 
-        if np.isnan(self.particles).all():
-            self.init_particles()
-            warnings.warn('All particles are set to NaN all in wall or out of bounds, all particles reinit',)
+        # if np.isnan(self.particles).all():
+        #     self.init_particles()
+        #    warnings.warn('All particles are set to NaN all in wall or out of bounds, all particles reinit',)
 
     def weight_computation(self, particle_vector, measurements_vector):
 
@@ -349,7 +367,7 @@ class ParticleFilter:
             prob = scipy.stats.norm(0, self.sigma_measure).pdf(difference)
             weight = weight * prob
 
-        #print(weight)
+        # print(weight)
         return weight
 
     def re_sample(self, measurements_vec):
@@ -368,13 +386,13 @@ class ParticleFilter:
         self.reinit_particles()
 
         for i in range(len(self.particles[:])):
-            self.particles[i][3] = self.weight_computation(self.particles[i][4:], measurements_vec)
+            self.particles[i, 3] = self.weight_computation(self.particles[i, 4:], measurements_vec)
 
         total_weight = np.sum(self.particles[:, 3])
 
         if total_weight != 0:
             for i in range(self.n_samples):
-                self.particles[i][3] = round((self.particles[i][3] / total_weight) * n_old_samples)
+                self.particles[i, 3] = round((self.particles[i, 3] / total_weight) * n_old_samples)
 
         index = 0
         weight = 1 / self.n_samples
@@ -383,9 +401,9 @@ class ParticleFilter:
 
             for j in range(int(self.particles[i, 3])):
 
-                thth = np.random.normal(self.particles[i][2], self.sigma_resample_angle) % 360
-                xx = abs(np.random.normal(self.particles[i][0], self.sigma_resample_pos))
-                yy = abs(np.random.normal(self.particles[i][1], self.sigma_resample_pos))
+                thth = np.random.normal(self.particles[i, 2], self.sigma_resample_angle) % 360
+                xx = abs(np.random.normal(self.particles[i, 0], self.sigma_resample_pos))
+                yy = abs(np.random.normal(self.particles[i, 1], self.sigma_resample_pos))
 
                 if xx > max_x_gen:
                     xx = max_x_gen
@@ -400,10 +418,10 @@ class ParticleFilter:
                 ind_row = math.floor(yy / self.cell_size)
                 ind_col = math.floor(xx / self.cell_size)
 
-                while self.grid_map[ind_row][ind_col] != 0:
+                while self.grid_map[ind_row, ind_col] != 0:
 
-                    xx = abs(np.random.normal(self.particles[i][0], self.sigma_resample_pos))
-                    yy = abs(np.random.normal(self.particles[i][1], self.sigma_resample_pos))
+                    xx = abs(np.random.normal(self.particles[i, 0], self.sigma_resample_pos))
+                    yy = abs(np.random.normal(self.particles[i, 1], self.sigma_resample_pos))
 
                     if xx > max_x_gen:
                         xx = max_x_gen
@@ -418,14 +436,14 @@ class ParticleFilter:
                     ind_row = math.floor(yy / self.cell_size)
                     ind_col = math.floor(xx / self.cell_size)
 
-                new_particles[index][0] = xx
-                new_particles[index][1] = yy
-                new_particles[index][2] = thth
+                new_particles[index, 0] = xx
+                new_particles[index, 1] = yy
+                new_particles[index, 2] = thth
 
                 vector_scans = self.get_scans(xx, yy, thth)
 
-                new_particles[index][4:] = vector_scans
-                new_particles[index][3] = weight
+                new_particles[index, 4:] = vector_scans
+                new_particles[index, 3] = weight
                 index += 1
 
                 if index > n_old_samples:
@@ -433,30 +451,30 @@ class ParticleFilter:
 
         for i in range(index, len(self.particles)):
 
-            new_particles[i][2] = 359 * random.uniform(0, 1)
+            new_particles[i, 2] = 359 * random.uniform(0, 1)
             # new_particles[i][2] = 359 * 0.707
 
-            new_particles[i][3] = weight
+            new_particles[i, 3] = weight
 
-            new_particles[i][0] = max_x_gen * random.uniform(0, 1) + 0.00001
-            new_particles[i][1] = max_y_gen * random.uniform(0, 1) + 0.00001
+            new_particles[i, 0] = max_x_gen * random.uniform(0, 1) + 0.00001
+            new_particles[i, 1] = max_y_gen * random.uniform(0, 1) + 0.00001
             # new_particles[i][0] = max_x_gen * 0.707
             # new_particles[i][1] = max_y_gen * 0.707
 
-            ind_row = math.floor(new_particles[i][1] / self.cell_size)
-            ind_col = math.floor(new_particles[i][0] / self.cell_size)
+            ind_row = math.floor(new_particles[i, 1] / self.cell_size)
+            ind_col = math.floor(new_particles[i, 0] / self.cell_size)
 
             while self.grid_map[ind_row][ind_col] != 0:
-                new_particles[i][0] = max_x_gen * random.uniform(0, 1) + 0.00001
-                new_particles[i][1] = max_y_gen * random.uniform(0, 1) + 0.00001
+                new_particles[i, 0] = max_x_gen * random.uniform(0, 1) + 0.00001
+                new_particles[i, 1] = max_y_gen * random.uniform(0, 1) + 0.00001
                 #new_particles[i][0] = max_x_gen * 0.707
                 #new_particles[i][1] = max_y_gen * 0.707
-                ind_row = math.floor(new_particles[i][1] / self.cell_size)
-                ind_col = math.floor(new_particles[i][0] / self.cell_size)
+                ind_row = math.floor(new_particles[i, 1] / self.cell_size)
+                ind_col = math.floor(new_particles[i, 0] / self.cell_size)
 
-            vector_scans = self.get_scans(new_particles[i][0], new_particles[i][1], new_particles[i][2])
+            vector_scans = self.get_scans(new_particles[i, 0], new_particles[i, 1], new_particles[i, 2])
 
-            new_particles[i][4:] = vector_scans
+            new_particles[i, 4:] = vector_scans
 
         self.particles = new_particles
 
@@ -486,4 +504,3 @@ class ParticleFilter:
 
         # Update Estimation
         self.update_estimation()
-

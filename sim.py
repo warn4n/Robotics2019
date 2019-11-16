@@ -76,19 +76,15 @@ def buffer_array(array, size):
 
 if __name__ == "__main__":
 
-    file_name = 'test_map.csv'
+    file_name = 'test_map2.csv'
     cell_resolution = 50
     num_scans = 8
-    num_particles = 200
+    num_particles = 100
     resampling = 0.2
-    sigma_measure = 25
+    sigma_measure = 5  # 25
     sigma_pos = 5
     sigma_angle = 2
     sigma_noise = 15
-
-    # Instantiate Particle Filter
-    a = Pf.ParticleFilter(file_name, cell_resolution, num_scans, num_particles, resampling, sigma_measure,
-                          sigma_pos, sigma_angle)
 
     # Define Start Pose
     x = 5*cell_resolution
@@ -96,11 +92,17 @@ if __name__ == "__main__":
     th = 91
 
     # Define Deltas (Not Constant in Real Life)
-    dx = 1*cell_resolution
-    dy = 1*cell_resolution
+    dx = 0*cell_resolution
+    dy = -1*cell_resolution
     dth = 1
 
+    # Instantiate Particle Filter
+    a = Pf.ParticleFilter(file_name, cell_resolution, num_scans, num_particles, resampling, sigma_measure,
+                          sigma_pos, sigma_angle, x, y, th)
+
     for i in range(50):
+        a.update_map(x, y)
+
         x = x + dx
         y = y + dy
         th = th + dth
