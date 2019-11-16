@@ -72,12 +72,12 @@ def buffer_array(array, size):
 
 if __name__ == "__main__":
 
-    file_name = 'test_map2.csv'
-    cell_resolution = 25.4*2
+    file_name = 'test_map.csv'
+    cell_resolution = 50
     num_scans = 8
-    num_particles = 250
+    num_particles = 300
     resampling = 0.2
-    sigma_measure = 5
+    sigma_measure = 10
     sigma_pos = 5
     sigma_angle = 2
     sigma_noise = 15
