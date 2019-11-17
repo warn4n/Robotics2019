@@ -32,6 +32,7 @@ class Lidar(threading.Thread):
             try:
                 m = self.getScan(data)
                 self.prettyPrint(m)
+                self.convertMeasures(m)
 
             except:
                 "read error"
