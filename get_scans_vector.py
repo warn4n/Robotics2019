@@ -13,3 +13,15 @@ def get_scans_vector(grid_map, n_angles, cell_size, x, y, th):
         th = th + angle_resolution
 
     return vector_scans
+
+def simLidar(grid_map, n_angles, cell_size, x, y, th):
+
+    vector_scans = []
+    angle_resolution = -360/n_angles
+
+    for i in range(n_angles):
+
+        vector_scans.append((ray.ray_tracing(x, y, th, grid_map, cell_size),-th%360))
+        th = th + angle_resolution
+
+    return np.array(vector_scans)
