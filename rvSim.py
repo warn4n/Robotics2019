@@ -94,14 +94,15 @@ if __name__ == "__main__":
 
     # Define Deltas (Not Constant in Real Life)
     dx = .1*cell_resolution
-    dy = 0*cell_resolution
-    dth = 0
+    dy = -.5*cell_resolution
+    dth = .5
 
     # Instantiate Particle Filter
     a = Pf.ParticleFilter(file_name, cell_resolution, num_scans, num_particles, resampling, sigma_measure,
                           sigma_pos, sigma_angle, x, y, th)
 
     lo_c = lc.LocalizationClient()
+    lo_c.sendData(np.array([ float(x),float(y),float(th)]))
 
     for i in range(50):
         a.update_map(x, y)
@@ -110,7 +111,11 @@ if __name__ == "__main__":
         y = y + dy
         th = th + dth
 
-        measures = scan.simLidar(a.grid_map, a.n_angles, a.cell_size, x, y, th)
+        measures = (scan.simLidar(a.grid_map, a.n_angles, a.cell_size, x, y, th)).flatten()
+
+        measures = np.append([float(dx), float(dy), float(dth)],measures)
+
+        # measures = scan.simLidar(a.grid_map, a.n_angles, a.cell_size, x, y, th)
         # measures = measures + np.random.normal(0, sigma_noise, a.n_angles)
 
         #measures = np.sort(measures,0)

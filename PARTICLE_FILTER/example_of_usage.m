@@ -3,7 +3,7 @@ clear;
 map_file_name = 'test_map3a.csv'; %csv occupancy map (0 is free region)
 cell_resolution = 50; %mm
 number_of_scans = 8; 
-number_of_particles = 2000;
+number_of_particles = 1000;
 resampling = 0.1; %from 0 to 1
 
 %this is used when assigning weights to particles
@@ -27,12 +27,12 @@ a = Particle_filter(map_file_name,cell_resolution,number_of_scans,number_of_part
 a.plot_map();
 a.show_particles();
 
-current_x = 5*cell_resolution;
-current_y = 5*cell_resolution;
-current_th = -90;
+current_x = 0;%5*cell_resolution;
+current_y = 0;%5*cell_resolution;
+current_th = 0; %-90;
 
-delta_x = .1*cell_resolution;
-delta_y = 0*cell_resolution;
+delta_x = 0;%.1*cell_resolution;
+delta_y = 0;%0*cell_resolution;
 delta_theta = 0;
 
 h_pos = NaN;
@@ -40,7 +40,18 @@ h_pos = NaN;
 t = tcpip('127.0.0.1', 42069, 'NetworkRole', 'server');
 fopen(t);
 
-
+flag = true;
+while flag
+        if t.BytesAvailable > 0
+            t.BytesAvailable
+            raw_data = fread(t, t.BytesAvailable);
+            data = typecast(uint8(raw_data), 'double');
+            current_x = data(1);
+            current_y = a.cell_size*a.rows - data(2);
+            current_th = -data(3);
+            flag = false;
+        end
+end
 
 
 for i = 1:50
@@ -59,6 +70,11 @@ for i = 1:50
             t.BytesAvailable
             raw_data = fread(t, t.BytesAvailable);
             data = typecast(uint8(raw_data), 'double');
+            
+            delta_x = data(1);
+            delta_y = -data(2);
+            delta_theta = -data(3); %assumes incomeing data is counter clockwise
+            
             mesures = data(end-15:2:end) %force it to give only last scan
             angles = data(end-14:2:end) % force it to give only last scan)
             flag = false;

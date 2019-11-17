@@ -19,7 +19,7 @@ class ParticleFilter:
     def __init__(self, file_name, cell_size, n_angles, n_samples, resample_rate, sigma_measure, sigma_resample_pos,
                  sigma_resample_angle, start_x=None, start_y=None, start_th=None):
         self.grid_map = genfromtxt(file_name, delimiter=',')  # read in file_name and store as numpy array
-        self.grid_map = np.flip(self.grid_map, axis=0)
+        #self.grid_map = np.flip(self.grid_map, axis=0)
         self.plot_map = self.grid_map
         self.cell_size = cell_size
         self.n_angles = n_angles

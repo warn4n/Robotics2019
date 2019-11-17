@@ -1,6 +1,8 @@
 import numpy as np
 import get_scans_vector as scan
 import Particle_Filter as Pf
+import LocalizationClient as lc
+import matplotlib.pyplot as plt
 
 
 def show_map(figure):
@@ -72,15 +74,15 @@ def buffer_array(array, size):
 
 if __name__ == "__main__":
 
-    file_name = 'test_map.csv'
+    file_name = 'test_map2.csv'
     cell_resolution = 50
     num_scans = 8
-    num_particles = 300
+    num_particles = 1000
     resampling = 0.2
     sigma_measure = 10
     sigma_pos = 5
     sigma_angle = 2
-    sigma_noise = 15
+    sigma_noise = .001
 
     # Define Start Pose
     x = 5*cell_resolution
@@ -108,5 +110,5 @@ if __name__ == "__main__":
 
         a.update_state(dx, dy, dth, measures)
 
-        # print("Actual Pose: (", x, ", ", y, ", ", th, ")")
-        # print("Estimated Pose: (", a.x_pos, ", ", a.y_pos, ", ", a.th_pos, ")")
+        print("Actual Pose: (", x, ", ", y, ", ", th, ")")
+        print("Estimated Pose: (", a.x_pos, ", ", a.y_pos, ", ", a.th_pos, ")")
