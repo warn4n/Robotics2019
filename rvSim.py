@@ -90,7 +90,7 @@ if __name__ == "__main__":
     # Define Start Pose
     x = 5*cell_resolution
     y = 45*cell_resolution
-    th = 90 # must send over -th matlab is clockwise python is counter
+    th = -90 # must send over -th matlab is clockwise python is counter
 
     # Define Deltas (Not Constant in Real Life)
     dx = .1*cell_resolution

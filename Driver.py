@@ -53,54 +53,58 @@ def Forward(dist):
     print("left Dist " + str(encoder.leftDistance))
     print("rightt Dist " + str(encoder.rightDistance))
 
-
-if __name__ == "__main__":
-
-
-    encoder = encoder_mytrial.Encoder()
-    encoder.start()
-
-    motors = example_motor.Motor()
-
-    PIDleft = PID.PID()
-    PIDleft.Kd = 0
-    PIDleft.Ki = .25
-    PIDleft.Kp = .25
-
-    PIDRight = PID.PID()
-    PIDRight.Kd = 0
-    PIDRight.Ki = .25
-    PIDRight.Kp = .25
-
-    #lidar = Lidar.Lidar()
-
+def testEncoder():
     lastX = 0
     lastY = 0
     lastTheta = 0
 
+
+
+    while True:
+        delx = encoder.x - lastX
+        dely = encoder.y - lastY
+        delTheta = encoder.theata - lastTheta
+
+        print("del x is: " + str(delx))
+        print("del y is: " + str(dely))
+        print("del theta is: " + str(np.degrees(delTheta)))
+
+        lastX = encoder.x
+        lastY = encoder.y
+        lastTheta = encoder.theata
+
+        time.sleep(10)
+
+if __name__ == "__main__":
+
     try:
+        encoder = encoder_mytrial.Encoder()
+        encoder.start()
 
-        while True:
+        motors = example_motor.Motor()
 
-            delx = encoder.x - lastX
-            dely = encoder.y - lastY
-            delTheta = encoder.theata - lastTheta
+        PIDleft = PID.PID()
+        PIDleft.Kd = 0
+        PIDleft.Ki = .25
+        PIDleft.Kp = .25
 
-            print("del x is: " + str(delx))
-            print("del y is: " + str(dely))
-            print("del theta is: " + str(np.degrees(delTheta)))
+        PIDRight = PID.PID()
+        PIDRight.Kd = 0
+        PIDRight.Ki = .25
+        PIDRight.Kp = .25
 
-            lastX = encoder.x
-            lastY =  encoder.y
-            lastTheta = encoder.theata
+        lidar = Lidar.Lidar()
+        lidar.start()
 
-            time.sleep(10)
+
+
+
 
     except KeyboardInterrupt:
 
         GPIO.cleanup()
         print("Killed")
-        os.killpg(1, signal.SIGTERM)
+        #os.killpg(1, signal.SIGTERM)
         #exit(1)
 
 
