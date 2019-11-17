@@ -6,6 +6,7 @@ import os
 import signal
 import RPi.GPIO as GPIO
 import example_motor
+import numpy as np
 
 
 PORT_NAME = '/dev/ttyUSB0'
@@ -18,6 +19,7 @@ class Lidar(threading.Thread):
     rpLidar = RPLidar(PORT_NAME)
     ml = None
     mr = None
+    measures = []
 
 
 
@@ -30,6 +32,7 @@ class Lidar(threading.Thread):
             try:
                 m = self.getScan(data)
                 self.prettyPrint(m)
+
             except:
                 "read error"
                 pass
@@ -82,7 +85,7 @@ class Lidar(threading.Thread):
 
     def readScans(self,scansToCollect):
         #print("this is a test")
-        self.rpLidar.clear_input()
+        #self.rpLidar.clear_input()
         data = []
         #print("new loop")
         forwardProximity = False
@@ -97,19 +100,26 @@ class Lidar(threading.Thread):
                     return data
             self.rpLidar.stop()
             #fix me
-            self.rpLidar = None
-            self.rpLidar = RPLidar(PORT_NAME)
+            #self.rpLidar = None
+            #self.rpLidar = RPLidar(PORT_NAME)
 
 
         except RPLidarException as e:
             print(e)
             print("read error")
             self.handleDescriptorErr()
+            #self.rpLidar.clear_input()
             pass
 
     def prettyPrint(self,measures):
         for x in range(8):
             print(measures[x*45])
+
+    def convertMeasures(self,measures):
+        m = []
+        for x in range(8):
+            m.append([measures[x*45][self.distanceIdx],(-x*45)%360])
+        self.measures = np.array(m)
 
 
     def handleDescriptorErr(self):

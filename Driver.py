@@ -9,6 +9,7 @@ import math
 import Lidar
 import os
 import RPi.GPIO as GPIO
+import LocalizationClient as lc
 
 def turn(angle):
     encoder.rightDistance = 0
@@ -77,6 +78,23 @@ def testEncoder():
 
 if __name__ == "__main__":
 
+    cell_resolution = 50
+
+    x = 5 * cell_resolution
+    y = 45 * cell_resolution
+    th = -90  # must send over -th matlab is clockwise python is counter
+
+    # Define Deltas (Not Constant in Real Life)
+    dx = 0 * cell_resolution
+    dy = 0 * cell_resolution
+    dth = 0
+
+    # Instantiate Particle Filter
+
+
+    lo_c = lc.LocalizationClient()
+    lo_c.sendData(np.array([float(x), float(y), float(th)]))
+
     try:
         encoder = encoder_mytrial.Encoder()
         encoder.start()
@@ -96,6 +114,18 @@ if __name__ == "__main__":
         lidar = Lidar.Lidar()
         lidar.start()
 
+        measures = []
+        for x in range(50):
+
+            measures = lidar.measures
+            measures = np.append([float(dx), float(dy), float(dth)], measures)
+
+            lo_c.sendData(measures)
+
+            time.sleep(.2)
+
+
+
 
 
 
@@ -103,6 +133,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
 
         GPIO.cleanup()
+        lo_c.close()
         print("Killed")
         #os.killpg(1, signal.SIGTERM)
         #exit(1)
