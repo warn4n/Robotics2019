@@ -5,7 +5,7 @@ import time
 class LocalizationClient():
 
 	#TCP_IP = '127.0.0.1'
-	TCP_IP = '192.168.1.5'
+	TCP_IP = '169.254.77.31'
 	TCP_PORT = 42069
 	BUFFER_SIZE = 1000
 	# MESSAGE = "Hello, World!"

@@ -124,6 +124,6 @@ if __name__ == "__main__":
         #a.update_state(dx, dy, dth, measures)
 
         print(measures)
-        time.sleep(.2)
+        time.sleep(.5)
         #print("Actual Pose: (", x, ", ", y, ", ", th, ")")
         #print("Estimated Pose: (", a.x_pos, ", ", a.y_pos, ", ", a.th_pos, ")")
